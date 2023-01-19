@@ -1,0 +1,21 @@
+﻿<Window x:Class="RobotController.Simulator"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RobotController"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"        
+        Title="OpenRCF" 
+        Height="720" Width="675"
+        KeyDown="KeyDownHandler" KeyUp="KeyUpHandler" 
+        Background="#FF5A68FF"
+        >
+    <Grid>
+        <WindowsFormsHost x:Name="glHost" Margin="10,10,10,120"/>
+        <Button Content="Rotate" Focusable="False" FontSize="18" Click="ButtonRotate_Click" Margin="10,0,0,65" HorizontalAlignment="Left" Width="83" Height="36" VerticalAlignment="Bottom"/>
+        <Slider x:Name="sliderRotate" Focusable="False" Margin="105,0,15,65" VerticalAlignment="Bottom" Minimum="-3.14" Maximum="3.14" TickFrequency="0.1" Height="25" ValueChanged="SliderRotate_ValueChanged"/>
+        <Button Content="Zoom" Focusable="False" FontSize="18" Margin="10,20,20,15" HorizontalAlignment="Left" Width="83" Click="ButtonZoom_Click" Height="35" VerticalAlignment="Bottom"/>
+        <Slider x:Name="sliderZoom" Focusable="False" Margin="105,0,15,15" VerticalAlignment="Bottom" Minimum="-4" Maximum="4" Height="27" ValueChanged="SliderZoom_ValueChanged"/>
+    </Grid>
+</Window>
