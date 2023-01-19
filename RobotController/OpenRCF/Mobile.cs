@@ -34,7 +34,7 @@ namespace OpenRCF
                    --|##2##|        |##4##|
                    ^   ##################             y
                l1  ¦   ##################             ^
-                   ¦   ##################             ¦
+                   ¦   ##################   front     ¦
                    v   ##################             ¦
                    --|##1##|        |##3##|          -¦-----> x
                         |       l2     |
@@ -47,10 +47,23 @@ namespace OpenRCF
         {
             double current_time = (int)DateTime.Now.Subtract(new DateTime(2023, 1, 1)).TotalMilliseconds;
 
+
+            /* Mecanum Forward Kinematics
+
+                l = l1 + l2
+
+                             |                       |   | w1 |
+                | vx |       |  1    1    1     1    | . | w2 |
+                | vy | = R/4 | -1    1    1    -1    |   | w3 |
+                | wz |       | 1/l  -1/l  1/l  -1/l  |   | w4 |
+            */
+
+            //velocities:
             double move_vel_x = (velocity[0] + velocity[1] + velocity[2] + velocity[3]) * Globals.Diam / 8;
             double move_vel_y = (velocity[1] - velocity[0] - velocity[3] + velocity[2]) * Globals.Diam / 8;
             double move_yawrate = (velocity[0] - velocity[1] + velocity[2] - velocity[3]) * Globals.Diam / 4 / (Globals.Axis1Length + Globals.Axis2Length);
-
+            
+            //positions:
             if (Mecanum.last_time > 0 || Mecanum.last_time < 0)
             {
                 dt = (current_time - last_time) / 1000;
@@ -100,6 +113,7 @@ namespace OpenRCF
             static double[] cpose = { 0, 0, 0 };
 
             public static void DoWork()
+
             {
                 for(;;)
                 {
