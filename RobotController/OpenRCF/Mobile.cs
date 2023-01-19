@@ -29,7 +29,7 @@ namespace OpenRCF
     {
         /*
               robot:	l1: Axis1Length
-                     l2: Axis2Length
+                        l2: Axis2Length
 
                    --|##2##|        |##4##|
                    ^   ##################             y
@@ -47,7 +47,6 @@ namespace OpenRCF
         {
             double current_time = (int)DateTime.Now.Subtract(new DateTime(2023, 1, 1)).TotalMilliseconds;
 
-
             /* Mecanum Forward Kinematics
 
                 l = l1 + l2
@@ -55,13 +54,13 @@ namespace OpenRCF
                              |                       |   | w1 |
                 | vx |       |  1    1    1     1    | . | w2 |
                 | vy | = R/4 | -1    1    1    -1    |   | w3 |
-                | wz |       | 1/l  -1/l  1/l  -1/l  |   | w4 |
+                | wz |       | -1/l  1/l -1/l  1/l  |   | w4 |
             */
 
             //velocities:
             double move_vel_x = (velocity[0] + velocity[1] + velocity[2] + velocity[3]) * Globals.Diam / 8;
             double move_vel_y = (velocity[1] - velocity[0] - velocity[3] + velocity[2]) * Globals.Diam / 8;
-            double move_yawrate = (velocity[0] - velocity[1] + velocity[2] - velocity[3]) * Globals.Diam / 4 / (Globals.Axis1Length + Globals.Axis2Length);
+            double move_yawrate = (-velocity[0] + velocity[1] - velocity[2] + velocity[3]) * Globals.Diam / 4 / (Globals.Axis1Length + Globals.Axis2Length);
             
             //positions:
             if (Mecanum.last_time > 0 || Mecanum.last_time < 0)
@@ -101,24 +100,56 @@ namespace OpenRCF
             Console.WriteLine("posX: " + cpose[0].ToString() + " posY: " + cpose[1].ToString() + " posYaw: " + cpose[2].ToString());
         }
 
-        public static void Mecanum4WInverseKinematics()
+        public static void Mecanum4WInverseKinematics(double[] odom, double[] velocity)
         {
+            /* Mecanum Forward Kinematics
+               | w1 |       | 1 -1 -(l1+l2) |   
+               | w2 | = 1/R | 1  1  (l1+l2) | . | vx |
+               | w3 |       | 1  1 -(l1+l2) |   | vy |
+               | w4 |       | 1 -1  (l1+l2) |   | wz |
+            */
+
+            double linearX = odom[0];
+            double linearY = odom[1];
+            double angularZ = odom[2];
+
+            // w1:
+            velocity[0] = 2 / Globals.Diam * (linearX - linearY - (Globals.Axis1Length + Globals.Axis2Length) / 2 * angularZ);
+            // w2:
+            velocity[1] = 2 / Globals.Diam * (linearX + linearY + (Globals.Axis1Length + Globals.Axis2Length) / 2 * angularZ);
+            // w3:
+            velocity[2] = 2 / Globals.Diam * (linearX + linearY - (Globals.Axis1Length + Globals.Axis2Length) / 2 * angularZ);
+            // w4:
+            velocity[3] = 2 / Globals.Diam * (linearX - linearY + (Globals.Axis1Length + Globals.Axis2Length) / 2 * angularZ);
+            
+            
+            Console.WriteLine("w1: " + velocity[0].ToString() + " w2: " + velocity[1].ToString() + " w3: " + velocity[2].ToString() + " w3: " + velocity[3].ToString());
 
         }
 
         public class ThreadWork
         {
-            static double[] vel = { -0.1, 0.1, 0.1, -0.1 };
-            static double[] odom = { 0, 0, 0 };
+            static double[] vel = { 0, 0, 0, 0 };
+            static double[] odom = { 0, 0, -1 };
             static double[] cpose = { 0, 0, 0 };
 
-            public static void DoWork()
+            static SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
+            static byte[] id = new byte[4] { 11, 12, 13, 14 };
 
+            public static void DoWork()
             {
-                for(;;)
+                Dynamixel.PortOpen("COM3");
+                Dynamixel.TorqueDisable(id);
+
+                for (;;)
                 {
-                    Mecanum.Mecanum4WForwardKinematics(vel, odom, cpose);
-                    Thread.Sleep(100);
+                    //Mecanum.Mecanum4WForwardKinematics(vel, odom, cpose);
+                    //Mecanum.Mecanum4WInverseKinematics(odom, vel);
+                    Dynamixel.RequestVelocityReply(id);
+
+                    Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", Dynamixel.Velocity(id[0]), Dynamixel.Velocity(id[1]), Dynamixel.Velocity(id[2]), Dynamixel.Velocity(id[3]));
+
+                    Thread.Sleep(10);
                 }
             }
         }
