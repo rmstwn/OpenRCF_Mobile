@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Navigation;
 using static OpenRCF.Mobile;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
@@ -42,17 +43,17 @@ namespace OpenRCF
         /*
               robot:	l1: Axis1Length
                         l2: Axis2Length
-
+                      ID=12          ID=11
                    --|##2##|        |##4##|
                    ^   ##################             y
                l1  ¦   ##################             ^
                    ¦   ##################   front     ¦
                    v   ##################             ¦
                    --|##1##|        |##3##|          -¦-----> x
+                      ID=13          ID=14
                         |       l2     |
                         |<------------>|
          */
-
 
         static double[] odom = { 0, 0, 0 };
         static double[] cpose = { 0, 0, 0 };
@@ -160,6 +161,21 @@ namespace OpenRCF
 
         public class ThreadWork
         {
+            /*
+                  robot:	l1: Axis1Length
+                            l2: Axis2Length
+                          ID=12          ID=11
+                       --|##2##|        |##4##|
+                       ^   ##################             y
+                   l1  ¦   ##################             ^
+                       ¦   ##################   front     ¦
+                       v   ##################             ¦
+                       --|##1##|        |##3##|          -¦-----> x
+                          ID=13          ID=14
+                            |       l2     |
+                            |<------------>|
+            */
+
             static double[] vel = { 0, 0, 0, 0 };
             static int[] TargetVel = { 0, 0, 0, 0 };
             static int[] CurrentVel = { 0, 0, 0, 0 };
@@ -167,114 +183,44 @@ namespace OpenRCF
             static double[] TargetOdom = { 0, 0, 0 };
 
             static SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
-            static byte[] id = new byte[4] { 11, 12, 13, 14 };
+            static byte[] id = new byte[4] { 13, 12, 14, 11 };
 
             public static void DoWork()
             {
                 Dynamixel.PortOpen("COM3");
-                Dynamixel.TorqueEnable(id);
 
-                //Dynamixel.VelocityControlMode(id);
-
-                TargetVel[0] = 30;
-                TargetVel[1] = 30;
-                TargetVel[2] = 30;
-                TargetVel[3] = 30;
-
-                TargetOdom[0] = 1.5;
+                TargetOdom[0] = 0;
                 TargetOdom[1] = 0;
-                TargetOdom[2] = 0;
+                TargetOdom[2] = 5;
 
-                Joint = Mecanum4WInverseKinematics(TargetOdom);
-
-                TargetVel[0] = (int)Joint.Velocity[0];
-                TargetVel[1] = (int)Joint.Velocity[1];
-                TargetVel[2] = (int)Joint.Velocity[2];
-                TargetVel[3] = (int)Joint.Velocity[3];
-
-                for (;;)
-                {
-                    Dynamixel.WriteVelocity(id, TargetVel);
-                    Dynamixel.RequestVelocityReply(id);
-
-                    CurrentVel = Dynamixel.Velocity(id);
-
-                    vel[0] = CurrentVel[0];
-                    vel[1] = CurrentVel[1];
-                    vel[2] = CurrentVel[2];
-                    vel[3] = CurrentVel[3];
-
-                    Mobile = Mecanum.Mecanum4WForwardKinematics(vel);
-
-                    Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
-                    Console.WriteLine("OdomX:{0}, OdomY:{1}, OdomZ:{2}", Mobile.Odometry[0], Mobile.Odometry[1], Mobile.Odometry[2]);
-                    Console.WriteLine("PosX:{0}, PosY:{1}, PosZ:{2}", Mobile.Position[0], Mobile.Position[1], Mobile.Position[2]);
-
-
-                    Thread.Sleep(10);
-                }
+                Move(id, TargetOdom);
             }
 
             public static void DoWork2()
             {
                 Dynamixel.PortOpen("COM3");
-                Dynamixel.TorqueEnable(id);
 
-                //Dynamixel.VelocityControlMode(id);
-
-                TargetVel[0] = 30;
-                TargetVel[1] = 30;
-                TargetVel[2] = 30;
-                TargetVel[3] = 30;
-
-                TargetOdom[0] = 2.5;
+                TargetOdom[0] = 0;
                 TargetOdom[1] = 0;
-                TargetOdom[2] = 0;
+                TargetOdom[2] = -5;
 
-                Joint = Mecanum4WInverseKinematics(TargetOdom);
-
-                TargetVel[0] = (int)Joint.Velocity[0];
-                TargetVel[1] = (int)Joint.Velocity[1];
-                TargetVel[2] = (int)Joint.Velocity[2];
-                TargetVel[3] = (int)Joint.Velocity[3];
-
-
-                for (; ; )
-                {
-                    Dynamixel.WriteVelocity(id, TargetVel);
-                    Dynamixel.RequestVelocityReply(id);
-
-                    CurrentVel = Dynamixel.Velocity(id);
-
-                    vel[0] = CurrentVel[0];
-                    vel[1] = CurrentVel[1];
-                    vel[2] = CurrentVel[2];
-                    vel[3] = CurrentVel[3];
-
-                    Mobile = Mecanum.Mecanum4WForwardKinematics(vel);
-
-                    Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
-                    Console.WriteLine("OdomX:{0}, OdomY:{1}, OdomZ:{2}", Mobile.Odometry[0], Mobile.Odometry[1], Mobile.Odometry[2]);
-                    Console.WriteLine("PosX:{0}, PosY:{1}, PosZ:{2}", Mobile.Position[0], Mobile.Position[1], Mobile.Position[2]);
-
-
-                    Thread.Sleep(10);
-                }
+                Move(id, TargetOdom);
             }
 
             public static void StopWork()
             {
                 Dynamixel.PortOpen("COM3");
-                Dynamixel.TorqueEnable(id);
-
-                TargetVel[0] = 0;
-                TargetVel[1] = 0;
-                TargetVel[2] = 0;
-                TargetVel[3] = 0;
 
                 TargetOdom[0] = 0;
                 TargetOdom[1] = 0;
                 TargetOdom[2] = 0;
+
+                Move(id, TargetOdom);
+            }
+
+            public static void Move(byte[] DxlId, double[] TargetOdom)
+            {
+                Dynamixel.TorqueEnable(DxlId);
 
                 Joint = Mecanum4WInverseKinematics(TargetOdom);
 
@@ -285,10 +231,10 @@ namespace OpenRCF
 
                 for (; ; )
                 {
-                    Dynamixel.WriteVelocity(id, TargetVel);
-                    Dynamixel.RequestVelocityReply(id);
+                    Dynamixel.WriteVelocity(DxlId, TargetVel);
+                    Dynamixel.RequestVelocityReply(DxlId);
 
-                    CurrentVel = Dynamixel.Velocity(id);
+                    CurrentVel = Dynamixel.Velocity(DxlId);
 
                     vel[0] = CurrentVel[0];
                     vel[1] = CurrentVel[1];
@@ -300,7 +246,6 @@ namespace OpenRCF
                     Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
                     Console.WriteLine("OdomX:{0}, OdomY:{1}, OdomZ:{2}", Mobile.Odometry[0], Mobile.Odometry[1], Mobile.Odometry[2]);
                     Console.WriteLine("PosX:{0}, PosY:{1}, PosZ:{2}", Mobile.Position[0], Mobile.Position[1], Mobile.Position[2]);
-
 
                     Thread.Sleep(10);
                 }

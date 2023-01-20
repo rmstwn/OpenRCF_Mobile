@@ -5,6 +5,8 @@ using OpenRCF;
 using static OpenRCF.Mecanum;
 using System.Threading;
 using System.Runtime.InteropServices;
+using static OpenRCF.SerialDevice;
+using static OpenRCF.Mobile;
 
 namespace RobotController
 {
@@ -18,7 +20,6 @@ namespace RobotController
         Thread thread1 = new Thread(ThreadWork.DoWork);
         Thread thread2 = new Thread(ThreadWork.DoWork2);
         Thread thread5 = new Thread(ThreadWork.StopWork);
-
 
         public MainWindow()
         {
