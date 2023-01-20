@@ -4,6 +4,7 @@ using Key = System.Windows.Input.Key;
 using OpenRCF;
 using static OpenRCF.Mecanum;
 using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace RobotController
 {
@@ -13,6 +14,11 @@ namespace RobotController
     public partial class MainWindow : Window
     {
         Simulator Simulator = new Simulator();
+
+        Thread thread1 = new Thread(ThreadWork.DoWork);
+        Thread thread2 = new Thread(ThreadWork.DoWork2);
+        Thread thread5 = new Thread(ThreadWork.StopWork);
+
 
         public MainWindow()
         {
@@ -35,18 +41,18 @@ namespace RobotController
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
-            Thread thread1 = new Thread(ThreadWork.DoWork);
             thread1.Start();
         }
 
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
-            
+            thread1.Abort();
+            thread2.Start();
         }
 
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
-    
+
         }
 
         private void Button4_Click(object sender, RoutedEventArgs e)
@@ -56,7 +62,10 @@ namespace RobotController
 
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
+            thread1.Abort();
+            thread2.Abort();
 
+            thread5.Start();
         }
 
 
