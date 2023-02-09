@@ -3,6 +3,7 @@ using System.Windows;
 using Key = System.Windows.Input.Key;
 using OpenRCF;
 using static OpenRCF.Mecanum;
+using static OpenRCF.Omnidirectional;
 using System.Threading;
 using System.Runtime.InteropServices;
 using static OpenRCF.SerialDevice;
