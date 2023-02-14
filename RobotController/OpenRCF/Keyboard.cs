@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Input;
+using OpenRCF;
 
-namespace OpenRCF
+namespace RobotController.OpenRCF
 {
     public static class Keyboard
     {

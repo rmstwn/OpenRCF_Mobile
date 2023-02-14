@@ -29,10 +29,8 @@ namespace OpenRCF
         public static double WheelDiameter = 0.1;
         public static double Delta = 45; //degree
 
-
         public static double sin = Math.Sin(GlobalsOmnidirectional.Delta * (Math.PI / 180));
         public static double cos = Math.Cos(GlobalsOmnidirectional.Delta * (Math.PI / 180));
-
     }
 
     public class Mobile
@@ -49,7 +47,7 @@ namespace OpenRCF
 
         public class JointState
         {
-            public double[] Velocity;
+            public double[] RPM;
         }
     }
 
@@ -80,7 +78,7 @@ namespace OpenRCF
         static public MobileInfo Mobile = new MobileInfo();
         static public JointState Joint = new JointState();
 
-        public static MobileInfo Mecanum4WForwardKinematics(double[] velocity)
+        public static MobileInfo Mecanum4WForwardKinematics(double[] rpm)
         {
             /* Mecanum Forward Kinematics
 
@@ -99,9 +97,9 @@ namespace OpenRCF
             //double move_vel_y = (velocity[1] - velocity[0] - velocity[3] + velocity[2]) * GlobalsMecanum.WheelDiameter / 8;
             //double move_yawrate = (-velocity[0] + velocity[1] - velocity[2] + velocity[3]) * GlobalsMecanum.WheelDiameter / 4 / (GlobalsMecanum.Axis1Length + GlobalsMecanum.Axis2Length);
 
-            double move_vel_x = ((velocity[0] + velocity[1] + velocity[2] + velocity[3]) / 4) / 60 * GlobalsMecanum.Circumference;
-            double move_vel_y = ((velocity[1] - velocity[0] - velocity[3] + velocity[2]) / 4) / 60 * GlobalsMecanum.Circumference;
-            double move_yawrate = ((-velocity[0] + velocity[1] - velocity[2] + velocity[3]) / 4) / 60 * GlobalsMecanum.WheelDiameter / 4 / (GlobalsMecanum.Axis1Length + GlobalsMecanum.Axis2Length);
+            double move_vel_x = ((rpm[0] + rpm[1] + rpm[2] + rpm[3]) / 4) / 60 * GlobalsMecanum.Circumference;
+            double move_vel_y = ((rpm[1] - rpm[0] - rpm[3] + rpm[2]) / 4) / 60 * GlobalsMecanum.Circumference;
+            double move_yawrate = ((-rpm[0] + rpm[1] - rpm[2] + rpm[3]) / 4) / 60 * GlobalsMecanum.WheelDiameter / 4 / (GlobalsMecanum.Axis1Length + GlobalsMecanum.Axis2Length);
 
             //positions:
             if (Mecanum.last_time > 0 || Mecanum.last_time < 0)
@@ -159,7 +157,7 @@ namespace OpenRCF
             double linearY = odom[1];
             double angularZ = odom[2];
 
-            double[] vel = { 0, 0, 0, 0 };
+            double[] rpm = { 0, 0, 0, 0 };
 
             //convert m/s to m/min
             double linear_vel_x_mins = linearX * 60;
@@ -177,14 +175,14 @@ namespace OpenRCF
 
             //calculate for the target motor RPM and direction
             //front-left motor
-            vel[0] = x_rpm - y_rpm - tan_rpm;
+            rpm[0] = x_rpm - y_rpm - tan_rpm;
             //rear-left motor
-            vel[2] = x_rpm + y_rpm - tan_rpm;
+            rpm[2] = x_rpm + y_rpm - tan_rpm;
 
             //front-right motor
-            vel[1] = x_rpm + y_rpm + tan_rpm;
+            rpm[1] = x_rpm + y_rpm + tan_rpm;
             //rear-right motor
-            vel[3] = x_rpm - y_rpm + tan_rpm;
+            rpm[3] = x_rpm - y_rpm + tan_rpm;
 
             //// w1:
             //vel[0] = 2 / GlobalsMecanum.WheelDiameter * (linearX - linearY - (GlobalsMecanum.Axis1Length + GlobalsMecanum.Axis2Length) / 2 * angularZ);
@@ -195,7 +193,7 @@ namespace OpenRCF
             //// w4:
             //vel[3] = 2 / GlobalsMecanum.WheelDiameter * (linearX - linearY + (GlobalsMecanum.Axis1Length + GlobalsMecanum.Axis2Length) / 2 * angularZ);
 
-            Joint.Velocity = vel;
+            Joint.RPM = rpm;
 
             //Console.WriteLine("w1: " + velocity[0].ToString() + " w2: " + velocity[1].ToString() + " w3: " + velocity[2].ToString() + " w3: " + velocity[3].ToString());
 
@@ -335,11 +333,18 @@ namespace OpenRCF
         static public MobileInfo Mobile = new MobileInfo();
         static public JointState Joint = new JointState();
 
-        public static MobileInfo Omnidirectional4WForwardKinematics(double[] velocity)
+        public static MobileInfo Omnidirectional4WForwardKinematics(double[] rpm)
         {
             double current_time = DateTime.Now.Subtract(new DateTime(2023, 1, 1)).TotalMilliseconds;
             
             Console.WriteLine(current_time);
+
+            double[] velocity = { 0, 0, 0, 0 };
+
+            velocity[0] = (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * (rpm[0] / 60);
+            velocity[1] = (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * (rpm[1] / 60);
+            velocity[2] = (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * (rpm[2] / 60);
+            velocity[3] = (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * (rpm[3] / 60);
 
             double move_vel_x = velocity[0] * GlobalsOmnidirectional.sin - velocity[2] * GlobalsOmnidirectional.sin - velocity[1] * GlobalsOmnidirectional.cos + velocity[3] * GlobalsOmnidirectional.cos;
             double move_vel_y = -velocity[0] * GlobalsOmnidirectional.cos + velocity[2] * GlobalsOmnidirectional.cos - velocity[1] * GlobalsOmnidirectional.sin + velocity[3] * GlobalsOmnidirectional.sin;
@@ -398,6 +403,8 @@ namespace OpenRCF
             Vector Odom = new Vector(3);
             Vector Result = new Vector(4);
 
+            double[] rpm = { 0, 0, 0, 0 };
+
             J[0, 0] = (float)GlobalsOmnidirectional.sin;
             J[0, 1] = -(float)GlobalsOmnidirectional.cos;
             J[0, 2] = -(float)GlobalsOmnidirectional.sin;
@@ -440,12 +447,14 @@ namespace OpenRCF
             Result.Set = JPseudo.Times(Odom.Get);
             Result.ConsoleWrite();
 
-            Joint.Velocity[0] = (double)Result[0] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter/2)) * 60;
-            Joint.Velocity[1] = (double)Result[1] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter/2)) * 60;
-            Joint.Velocity[2] = (double)Result[2] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter/2)) * 60;
-            Joint.Velocity[3] = (double)Result[3] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter/2)) * 60;
+            rpm[0] = (double)(Result[0] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * 60);
+            rpm[1] = (double)(Result[1] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * 60);
+            rpm[2] = (double)(Result[2] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * 60);
+            rpm[3] = (double)(Result[3] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * 60);
+            
+            Joint.RPM = rpm;
 
-            Console.WriteLine(Joint.Velocity);
+            Console.WriteLine("RPM:{0}, RPM:{1}, RPM:{2}, RPM:{3}", rpm[0], rpm[1], rpm[2], rpm[3]);
 
             return Joint;
         }
@@ -504,6 +513,7 @@ namespace OpenRCF
 
                 Joint = Omnidirectional4WInverseKinematics(TargetOdom);
 
+                Console.WriteLine("GVel:{0}, GVel:{1}, GVel:{2}, GVel:{3}", Joint.RPM[0] / 0.229, Joint.RPM[1] / 0.229, Joint.RPM[2] / 0.229, Joint.RPM[3] / 0.229);
             }
 
             public static void DoWork2()
