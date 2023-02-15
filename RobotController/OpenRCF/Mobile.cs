@@ -49,11 +49,8 @@ namespace OpenRCF
         {
             public double[] RPM;
         }
-    }
 
-    public class Mecanum
-    {
-        /*
+        /* Mecanum
               robot:	l1: Axis1Length
                         l2: Axis2Length
                       ID=12          ID=11
@@ -75,8 +72,8 @@ namespace OpenRCF
         static double[] last_odom;
         static double dt;
 
-        static public MobileInfo Mobile = new MobileInfo();
-        static public JointState Joint = new JointState();
+        static public MobileInfo MobileMecanum = new MobileInfo();
+        static public JointState JointMecanum = new JointState();
 
         public static MobileInfo Mecanum4WForwardKinematics(double[] rpm)
         {
@@ -102,7 +99,7 @@ namespace OpenRCF
             double move_yawrate = ((-rpm[0] + rpm[1] - rpm[2] + rpm[3]) / 4) / 60 * GlobalsMecanum.WheelDiameter / 4 / (GlobalsMecanum.Axis1Length + GlobalsMecanum.Axis2Length);
 
             //positions:
-            if (Mecanum.last_time > 0 || Mecanum.last_time < 0)
+            if (last_time > 0 || last_time < 0)
             {
                 dt = (current_time - last_time) / 1000;
 
@@ -136,10 +133,10 @@ namespace OpenRCF
             last_time = current_time;
             last_odom = odom;
 
-            Mobile.Odometry = odom;
-            Mobile.Position = cpose;
+            MobileMecanum.Odometry = odom;
+            MobileMecanum.Position = cpose;
 
-            return Mobile;
+            return MobileMecanum;
 
             //Console.WriteLine("posX: " + cpose[0].ToString() + " posY: " + cpose[1].ToString() + " posYaw: " + cpose[2].ToString());
         }
@@ -193,121 +190,14 @@ namespace OpenRCF
             //// w4:
             //vel[3] = 2 / GlobalsMecanum.WheelDiameter * (linearX - linearY + (GlobalsMecanum.Axis1Length + GlobalsMecanum.Axis2Length) / 2 * angularZ);
 
-            Joint.RPM = rpm;
+            JointMecanum.RPM = rpm;
 
             //Console.WriteLine("w1: " + velocity[0].ToString() + " w2: " + velocity[1].ToString() + " w3: " + velocity[2].ToString() + " w3: " + velocity[3].ToString());
 
-            return Joint;
+            return JointMecanum;
         }
 
-        //public class ThreadWork
-        //{
-        //    /*
-        //          robot:	l1: Axis1Length
-        //                    l2: Axis2Length
-        //                  ID=12          ID=11
-        //               --|##2##|        |##4##|
-        //               ^   ##################             y
-        //           l1  ¦   ##################             ^
-        //               ¦   ##################   front     ¦
-        //               v   ##################             ¦
-        //               --|##1##|        |##3##|          -¦-----> x
-        //                  ID=13          ID=14
-        //                    |       l2     |
-        //                    |<------------>|
-        //    */
-
-        //    static double[] vel = { 0, 0, 0, 0 };
-        //    static int[] TargetVel = { 0, 0, 0, 0 };
-        //    static int[] CurrentVel = { 0, 0, 0, 0 };
-
-        //    static double[] TargetOdom = { 0, 0, 0 };
-
-        //    static SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
-        //    static byte[] id = new byte[4] { 13, 12, 14, 11 };
-
-        //    public static void DoWork()
-        //    {
-        //        //Dynamixel.PortOpen("COM3");
-
-        //        //TargetOdom[0] = 0.151843644923507;
-        //        //TargetOdom[1] = 0;
-        //        //TargetOdom[2] = 0;
-
-        //        //Move(id, TargetOdom);
-
-        //        TargetVel[0] = (int)Joint.Velocity[0];
-        //        TargetVel[1] = (int)Joint.Velocity[1];
-        //        TargetVel[2] = (int)Joint.Velocity[2];
-        //        TargetVel[3] = (int)Joint.Velocity[3];
-
-
-        //    }
-
-        //    public static void DoWork2()
-        //    {
-        //        //Dynamixel.PortOpen("COM3");
-
-        //        TargetOdom[0] = 0;
-        //        TargetOdom[1] = 0;
-        //        TargetOdom[2] = 0;
-
-        //        Move(id, TargetOdom);
-        //    }
-
-        //    public static void StopWork()
-        //    {
-        //        //Dynamixel.PortOpen("COM3");
-
-        //        TargetOdom[0] = 0;
-        //        TargetOdom[1] = 0;
-        //        TargetOdom[2] = 0;
-
-        //        Move(id, TargetOdom);
-        //    }
-
-        //    public static void Move(byte[] DxlId, double[] TargetOdom)
-        //    {
-        //        Dynamixel.TorqueEnable(DxlId);
-
-        //        Joint = Mecanum4WInverseKinematics(TargetOdom);
-
-        //        TargetVel[0] = (int)Joint.Velocity[0];
-        //        TargetVel[1] = (int)Joint.Velocity[1];
-        //        TargetVel[2] = (int)Joint.Velocity[2];
-        //        TargetVel[3] = (int)Joint.Velocity[3];
-
-        //        for (; ; )
-        //        {
-        //            Dynamixel.WriteVelocity(DxlId, TargetVel);
-        //            Dynamixel.RequestVelocityReply(DxlId);
-
-        //            CurrentVel = Dynamixel.Velocity(DxlId);
-
-        //            vel[0] = TargetVel[0];
-        //            vel[1] = TargetVel[1];
-        //            vel[2] = TargetVel[2];
-        //            vel[3] = TargetVel[3];
-
-
-        //            Mobile = Mecanum.Mecanum4WForwardKinematics(vel);
-
-        //            Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", TargetVel[0], TargetVel[1], TargetVel[2], TargetVel[3]);
-        //            //Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
-        //            Console.WriteLine("OdomX:{0}, OdomY:{1}, OdomZ:{2}", Mobile.Odometry[0], Mobile.Odometry[1], Mobile.Odometry[2]);
-        //            //Console.WriteLine("PosX:{0}, PosY:{1}, PosZ:{2}", Mobile.Position[0], Mobile.Position[1], Mobile.Position[2]);
-
-        //            Thread.Sleep(10);
-        //        }
-        //    }
-        //}
-    }
-
-
-    public class Omnidirectional
-    {
-
-        /*
+        /* Omnidirectional
            robot:	L: AxisLength
 
            ID=14  |###|       |###|  ID=11
@@ -323,21 +213,19 @@ namespace OpenRCF
                           |<----->|
         */
 
-        static double[] odom = { 0, 0, 0 };
-        static double[] cpose = { 0, 0, 0 };
+        //static double[] odom = { 0, 0, 0 };
+        //static double[] cpose = { 0, 0, 0 };
 
-        static double last_time;
-        static double[] last_odom;
-        static double dt;
+        //static double last_time;
+        //static double[] last_odom;
+        //static double dt;
 
-        static public MobileInfo Mobile = new MobileInfo();
-        static public JointState Joint = new JointState();
+        static public MobileInfo MobileOmni = new MobileInfo();
+        static public JointState JointOmni = new JointState();
 
         public static MobileInfo Omnidirectional4WForwardKinematics(double[] rpm)
         {
             double current_time = DateTime.Now.Subtract(new DateTime(2023, 1, 1)).TotalMilliseconds;
-            
-            Console.WriteLine(current_time);
 
             double[] velocity = { 0, 0, 0, 0 };
 
@@ -351,7 +239,7 @@ namespace OpenRCF
             double move_yawrate = -(velocity[0] + velocity[1] + velocity[2] + velocity[3]) / GlobalsOmnidirectional.AxisLength;
 
             //positions:
-            if (Omnidirectional.last_time > 0 || Omnidirectional.last_time < 0)
+            if (last_time > 0 || last_time < 0)
             {
                 dt = (current_time - last_time) / 1000;
 
@@ -385,10 +273,10 @@ namespace OpenRCF
             last_time = current_time;
             last_odom = odom;
 
-            Mobile.Odometry = odom;
-            Mobile.Position = cpose;
+            MobileOmni.Odometry = odom;
+            MobileOmni.Position = cpose;
 
-            return Mobile;
+            return MobileOmni;
         }
 
         public static JointState Omnidirectional4WInverseKinematics(double[] odom)
@@ -420,111 +308,216 @@ namespace OpenRCF
             J[2, 2] = 1;
             J[2, 3] = 1;
 
-            J.ConsoleWrite();
+            //J.ConsoleWrite();
 
             JTranspose.Set = J.Transpose;
-            JTranspose.ConsoleWrite();
+            //JTranspose.ConsoleWrite();
 
             JJ.Set = J.Times(JTranspose.Get);
-            JJ.ConsoleWrite();
+            //JJ.ConsoleWrite();
 
             JInverse.Set = JJ.Inverse;
-            JInverse.ConsoleWrite();
+            //JInverse.ConsoleWrite();
 
             JPseudo.Set = JTranspose.Times(JInverse.Get);
-            JPseudo.ConsoleWrite();
-
-            odom[0] = 0.4;
-            odom[1] = 0.0;
-            odom[2] = 0.0;
+            //JPseudo.ConsoleWrite();
 
             Odom[0] = (float)odom[0];
             Odom[1] = (float)odom[1];
             Odom[2] = (float)odom[2];
 
-            Odom.ConsoleWrite();
+            //Odom.ConsoleWrite();
 
             Result.Set = JPseudo.Times(Odom.Get);
-            Result.ConsoleWrite();
+            //Result.ConsoleWrite();
 
             rpm[0] = (double)(Result[0] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * 60);
             rpm[1] = (double)(Result[1] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * 60);
             rpm[2] = (double)(Result[2] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * 60);
             rpm[3] = (double)(Result[3] / (2 * Math.PI * (GlobalsOmnidirectional.WheelDiameter / 2)) * 60);
-            
-            Joint.RPM = rpm;
 
-            Console.WriteLine("RPM:{0}, RPM:{1}, RPM:{2}, RPM:{3}", rpm[0], rpm[1], rpm[2], rpm[3]);
+            JointOmni.RPM = rpm;
 
-            return Joint;
+            //Console.WriteLine("RPM:{0}, RPM:{1}, RPM:{2}, RPM:{3}", rpm[0], rpm[1], rpm[2], rpm[3]);
+
+            return JointOmni;
         }
 
-        public class ThreadWork
-        {
-            /*
-                  robot:	l1: Axis1Length
-                            l2: Axis2Length
-                          ID=12          ID=11
-                       --|##2##|        |##4##|
-                       ^   ##################             y
-                   l1  ¦   ##################             ^
-                       ¦   ##################   front     ¦
-                       v   ##################             ¦
-                       --|##1##|        |##3##|          -¦-----> x
-                          ID=13          ID=14
-                            |       l2     |
-                            |<------------>|
-            */
-
-            static double[] vel = { 0, 0, 0, 0 };
-            static int[] TargetVel = { 0, 0, 0, 0 };
-            static int[] CurrentVel = { 0, 0, 0, 0 };
-
-            static double[] TargetOdom = { 0, 0, 0 };
-
-            static SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
-            static byte[] id = new byte[4] { 13, 12, 14, 11 };
-
-            public static void DoWork()
-            {
-                //Dynamixel.PortOpen("COM3");
-
-                //TargetOdom[0] = 0.151843644923507;
-                //TargetOdom[1] = 0;
-                //TargetOdom[2] = 0;
-
-                //Move(id, TargetOdom);
-                //for (; ; )
-                //{
-                //    vel[0] = 0.141421356237310;
-                //    vel[1] = -0.141421356237310;
-                //    vel[2] = -0.141421356237310;
-                //    vel[3] = 0.141421356237310;
-
-                //    Mobile = Omnidirectional4WForwardKinematics(vel);
-
-                //    Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", vel[0], vel[1], vel[2], vel[3]);
-                //    //Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
-                //    Console.WriteLine("OdomX:{0}, OdomY:{1}, OdomZ:{2}", Mobile.Odometry[0], Mobile.Odometry[1], Mobile.Odometry[2]);
-                //    Console.WriteLine("PosX:{0}, PosY:{1}, PosZ:{2}", Mobile.Position[0], Mobile.Position[1], Mobile.Position[2]);
-
-                //    Thread.Sleep(10);
-                //}
-
-                Joint = Omnidirectional4WInverseKinematics(TargetOdom);
-
-                Console.WriteLine("GVel:{0}, GVel:{1}, GVel:{2}, GVel:{3}", Joint.RPM[0] / 0.229, Joint.RPM[1] / 0.229, Joint.RPM[2] / 0.229, Joint.RPM[3] / 0.229);
-            }
-
-            public static void DoWork2()
-            {
-
-            }
-
-            public static void StopWork()
-            {
-
-            }
-        }
     }
+
+    //public class Mecanum
+    //{
+    //    //public class ThreadWork
+    //    //{
+    //    //    /*
+    //    //          robot:	l1: Axis1Length
+    //    //                    l2: Axis2Length
+    //    //                  ID=12          ID=11
+    //    //               --|##2##|        |##4##|
+    //    //               ^   ##################             y
+    //    //           l1  ¦   ##################             ^
+    //    //               ¦   ##################   front     ¦
+    //    //               v   ##################             ¦
+    //    //               --|##1##|        |##3##|          -¦-----> x
+    //    //                  ID=13          ID=14
+    //    //                    |       l2     |
+    //    //                    |<------------>|
+    //    //    */
+
+    //    //    static double[] vel = { 0, 0, 0, 0 };
+    //    //    static int[] TargetVel = { 0, 0, 0, 0 };
+    //    //    static int[] CurrentVel = { 0, 0, 0, 0 };
+
+    //    //    static double[] TargetOdom = { 0, 0, 0 };
+
+    //    //    static SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
+    //    //    static byte[] id = new byte[4] { 13, 12, 14, 11 };
+
+    //    //    public static void DoWork()
+    //    //    {
+    //    //        //Dynamixel.PortOpen("COM3");
+
+    //    //        //TargetOdom[0] = 0.151843644923507;
+    //    //        //TargetOdom[1] = 0;
+    //    //        //TargetOdom[2] = 0;
+
+    //    //        //Move(id, TargetOdom);
+
+    //    //        TargetVel[0] = (int)Joint.Velocity[0];
+    //    //        TargetVel[1] = (int)Joint.Velocity[1];
+    //    //        TargetVel[2] = (int)Joint.Velocity[2];
+    //    //        TargetVel[3] = (int)Joint.Velocity[3];
+
+
+    //    //    }
+
+    //    //    public static void DoWork2()
+    //    //    {
+    //    //        //Dynamixel.PortOpen("COM3");
+
+    //    //        TargetOdom[0] = 0;
+    //    //        TargetOdom[1] = 0;
+    //    //        TargetOdom[2] = 0;
+
+    //    //        Move(id, TargetOdom);
+    //    //    }
+
+    //    //    public static void StopWork()
+    //    //    {
+    //    //        //Dynamixel.PortOpen("COM3");
+
+    //    //        TargetOdom[0] = 0;
+    //    //        TargetOdom[1] = 0;
+    //    //        TargetOdom[2] = 0;
+
+    //    //        Move(id, TargetOdom);
+    //    //    }
+
+    //    //    public static void Move(byte[] DxlId, double[] TargetOdom)
+    //    //    {
+    //    //        Dynamixel.TorqueEnable(DxlId);
+
+    //    //        Joint = Mecanum4WInverseKinematics(TargetOdom);
+
+    //    //        TargetVel[0] = (int)Joint.Velocity[0];
+    //    //        TargetVel[1] = (int)Joint.Velocity[1];
+    //    //        TargetVel[2] = (int)Joint.Velocity[2];
+    //    //        TargetVel[3] = (int)Joint.Velocity[3];
+
+    //    //        for (; ; )
+    //    //        {
+    //    //            Dynamixel.WriteVelocity(DxlId, TargetVel);
+    //    //            Dynamixel.RequestVelocityReply(DxlId);
+
+    //    //            CurrentVel = Dynamixel.Velocity(DxlId);
+
+    //    //            vel[0] = TargetVel[0];
+    //    //            vel[1] = TargetVel[1];
+    //    //            vel[2] = TargetVel[2];
+    //    //            vel[3] = TargetVel[3];
+
+
+    //    //            Mobile = Mecanum.Mecanum4WForwardKinematics(vel);
+
+    //    //            Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", TargetVel[0], TargetVel[1], TargetVel[2], TargetVel[3]);
+    //    //            //Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
+    //    //            Console.WriteLine("OdomX:{0}, OdomY:{1}, OdomZ:{2}", Mobile.Odometry[0], Mobile.Odometry[1], Mobile.Odometry[2]);
+    //    //            //Console.WriteLine("PosX:{0}, PosY:{1}, PosZ:{2}", Mobile.Position[0], Mobile.Position[1], Mobile.Position[2]);
+
+    //    //            Thread.Sleep(10);
+    //    //        }
+    //    //    }
+    //    //}
+    //}
+
+    //public class Omnidirectional
+    //{
+    //    public class ThreadWork
+    //    {
+    //        /*
+    //              robot:	l1: Axis1Length
+    //                        l2: Axis2Length
+    //                      ID=12          ID=11
+    //                   --|##2##|        |##4##|
+    //                   ^   ##################             y
+    //               l1  ¦   ##################             ^
+    //                   ¦   ##################   front     ¦
+    //                   v   ##################             ¦
+    //                   --|##1##|        |##3##|          -¦-----> x
+    //                      ID=13          ID=14
+    //                        |       l2     |
+    //                        |<------------>|
+    //        */
+
+    //        static double[] vel = { 0, 0, 0, 0 };
+    //        static int[] TargetVel = { 0, 0, 0, 0 };
+    //        static int[] CurrentVel = { 0, 0, 0, 0 };
+
+    //        static double[] TargetOdom = { 0, 0, 0 };
+
+    //        static SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
+    //        static byte[] id = new byte[4] { 13, 12, 14, 11 };
+
+    //        public static void DoWork()
+    //        {
+    //            //Dynamixel.PortOpen("COM3");
+
+    //            //TargetOdom[0] = 0.151843644923507;
+    //            //TargetOdom[1] = 0;
+    //            //TargetOdom[2] = 0;
+
+    //            //Move(id, TargetOdom);
+    //            //for (; ; )
+    //            //{
+    //            //    vel[0] = 0.141421356237310;
+    //            //    vel[1] = -0.141421356237310;
+    //            //    vel[2] = -0.141421356237310;
+    //            //    vel[3] = 0.141421356237310;
+
+    //            //    Mobile = Omnidirectional4WForwardKinematics(vel);
+
+    //            //    Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", vel[0], vel[1], vel[2], vel[3]);
+    //            //    //Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
+    //            //    Console.WriteLine("OdomX:{0}, OdomY:{1}, OdomZ:{2}", Mobile.Odometry[0], Mobile.Odometry[1], Mobile.Odometry[2]);
+    //            //    Console.WriteLine("PosX:{0}, PosY:{1}, PosZ:{2}", Mobile.Position[0], Mobile.Position[1], Mobile.Position[2]);
+
+    //            //    Thread.Sleep(10);
+    //            //}
+
+    //            JointOmni = Omnidirectional4WInverseKinematics(TargetOdom);
+
+    //            Console.WriteLine("GVel:{0}, GVel:{1}, GVel:{2}, GVel:{3}", JointOmni.RPM[0] / 0.229, JointOmni.RPM[1] / 0.229, JointOmni.RPM[2] / 0.229, JointOmni.RPM[3] / 0.229);
+    //        }
+
+    //        public static void DoWork2()
+    //        {
+
+    //        }
+
+    //        public static void StopWork()
+    //        {
+
+    //        }
+    //    }
+    //}
 }

@@ -2,8 +2,6 @@
 using System.Windows;
 using Key = System.Windows.Input.Key;
 using OpenRCF;
-using static OpenRCF.Mecanum;
-using static OpenRCF.Omnidirectional;
 using System.Threading;
 using System.Runtime.InteropServices;
 using static OpenRCF.SerialDevice;
@@ -18,9 +16,9 @@ namespace RobotController
     {
         Simulator Simulator = new Simulator();
 
-        Thread thread1 = new Thread(ThreadWork.DoWork);
-        Thread thread2 = new Thread(ThreadWork.DoWork2);
-        Thread thread5 = new Thread(ThreadWork.StopWork);
+        //Thread thread1 = new Thread(ThreadWork.DoWork);
+        //Thread thread2 = new Thread(ThreadWork.DoWork2);
+        //Thread thread5 = new Thread(ThreadWork.StopWork);
 
         public MainWindow()
         {
@@ -43,13 +41,13 @@ namespace RobotController
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
-            thread1.Start();
+            //thread1.Start();
         }
 
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
-            thread1.Abort();
-            thread2.Start();
+            //thread1.Abort();
+            //thread2.Start();
         }
 
         private void Button3_Click(object sender, RoutedEventArgs e)
@@ -64,10 +62,10 @@ namespace RobotController
 
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
-            thread1.Abort();
-            thread2.Abort();
+            //thread1.Abort();
+            //thread2.Abort();
 
-            thread5.Start();
+            //thread5.Start();
         }
 
 

@@ -23,11 +23,9 @@ namespace RobotController.OpenRCF
             int[] TargetVel = { 0, 0, 0, 0 };
             int[] CurrentVel = { 0, 0, 0, 0 };
 
-
-            double VelX;
-
             SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
             byte[] id = new byte[4] { 13, 12, 14, 11 };
+            //byte[] id = new byte[4] { 11, 12, 13, 14 };
 
             Dynamixel.PortOpen("COM3");
             Dynamixel.TorqueEnable(id);
@@ -71,33 +69,40 @@ namespace RobotController.OpenRCF
                     var state = controller.GetState();
                     //if (previousState.PacketNumber != state.PacketNumber)
 
-                    TargetOdom[0] = map(state.Gamepad.LeftThumbY, -32768, 32767, -1, 1);
-                    TargetOdom[1] = map(state.Gamepad.LeftThumbX, -32768, 32767, -1, 1);
-                    TargetOdom[2] = map(state.Gamepad.RightThumbX, -32768, 32767, -4, 4);
+                    TargetOdom[0] = map(state.Gamepad.LeftThumbY, -32768, 32767, -0.5, 0.5);
+                    TargetOdom[1] = map(state.Gamepad.LeftThumbX, -32768, 32767, -0.5, 0.5);
+                    TargetOdom[2] = map(state.Gamepad.RightThumbX, -32768, 32767, -0.6, 0.6);
 
-                    Joint = Mecanum.Mecanum4WInverseKinematics(TargetOdom);
+                    if (TargetOdom[0] < 0.1 && TargetOdom[0] > -0.1) TargetOdom[0] = 0;
+                    if (TargetOdom[1] < 0.1 && TargetOdom[1] > -0.1) TargetOdom[1] = 0;
+                    if (TargetOdom[2] < 0.1 && TargetOdom[2] > -0.1) TargetOdom[2] = 0;
 
-                    Console.WriteLine("GVel:{0}, GVel:{1}, GVel:{2}, GVel:{3}", Joint.RPM[0] / 0.229, Joint.RPM[1] / 0.229, Joint.RPM[2] / 0.229, Joint.RPM[3] / 0.229);
+                    Joint = Mecanum4WInverseKinematics(TargetOdom);
 
-                    TargetVel[0] = (int)Joint.RPM[0];
-                    TargetVel[1] = (int)Joint.RPM[1];
-                    TargetVel[2] = (int)Joint.RPM[2];
-                    TargetVel[3] = (int)Joint.RPM[3];
+                    //Console.WriteLine("TargetOdom:{0}, TargetOdom:{1}, TargetOdom:{2}", TargetOdom[0], TargetOdom[1], TargetOdom[2]);
+                    //Console.WriteLine("GVel:{0}, GVel:{1}, GVel:{2}, GVel:{3}", Joint.RPM[0], Joint.RPM[1], Joint.RPM[2], Joint.RPM[3]);
+
+                    TargetVel[0] = (int)(Math.Ceiling(Joint.RPM[0] / 0.229));
+                    TargetVel[1] = (int)(Math.Ceiling(Joint.RPM[1] / 0.229));
+                    TargetVel[2] = (int)(Math.Ceiling(Joint.RPM[2] / 0.229));
+                    TargetVel[3] = (int)(Math.Ceiling(Joint.RPM[3] / 0.229)); 
 
                     Dynamixel.WriteVelocity(id, TargetVel);
                     Dynamixel.RequestVelocityReply(id);
 
                     CurrentVel = Dynamixel.Velocity(id);
 
-                    vel[0] = TargetVel[0];
-                    vel[1] = TargetVel[1];
-                    vel[2] = TargetVel[2];
-                    vel[3] = TargetVel[3];
+                    vel[0] = CurrentVel[0];
+                    vel[1] = CurrentVel[1];
+                    vel[2] = CurrentVel[2];
+                    vel[3] = CurrentVel[3];
 
-                    Mobile = Mecanum.Mecanum4WForwardKinematics(vel);
+                    Mobile = Mecanum4WForwardKinematics(vel);
 
-                    //Console.WriteLine("RawX:{0}, VelX:{1}", state.Gamepad.LeftThumbX, VelX);
+                    CurrentVel = Dynamixel.Velocity(id);
 
+                    //Console.WriteLine("RawX:{0}, VelX:{1}", state.Gamepad.LeftThumbX, vel[0]);
+                    Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
                     //Console.WriteLine(state.Gamepad);
                     Thread.Sleep(30);
                     previousState = state;
