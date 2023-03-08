@@ -314,7 +314,13 @@ namespace OpenRCF
 
                     if (Math.Abs(Mobile.Position[0]) >= Math.Abs(TargetPos[0]) && Math.Abs(Mobile.Position[1]) >= Math.Abs(TargetPos[1]) && Math.Abs(Mobile.Position[2]) >= Math.Abs(TargetPos[2]))
                     {
-                        Mobile.Position = null;
+                        Mobile.Position[0] = (int)0;
+                        Mobile.Position[1] = (int)0;
+                        Mobile.Position[2] = (int)0;
+
+                        TargetPos[0] = (int)0;
+                        TargetPos[1] = (int)0;
+                        TargetPos[2] = (int)0;
 
                         TargetVel[0] = (int)0;
                         TargetVel[1] = (int)0;
@@ -596,7 +602,13 @@ namespace OpenRCF
 
                     if (Math.Abs(Mobile.Position[0]) >= Math.Abs(TargetPos[0]) && Math.Abs(Mobile.Position[1]) >= Math.Abs(TargetPos[1]) && Math.Abs(Mobile.Position[2]) >= Math.Abs(TargetPos[2]))
                     {
-                        Mobile.Position = null;
+                        Mobile.Position[0] = (int)0;
+                        Mobile.Position[1] = (int)0;
+                        Mobile.Position[2] = (int)0;
+
+                        TargetPos[0] = (int)0;
+                        TargetPos[1] = (int)0;
+                        TargetPos[2] = (int)0;
 
                         TargetVel[0] = (int)0;
                         TargetVel[1] = (int)0;
