@@ -1,4 +1,5 @@
-﻿using OpenTK.Input;
+﻿using OpenRCF;
+using OpenTK.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,14 +8,14 @@ using System.Threading.Tasks;
 using SharpDX.XInput;
 using static System.Windows.Forms.AxHost;
 using System.Threading;
-using OpenRCF;
 using static OpenRCF.RobotObject;
 using static OpenRCF.Mobile;
+using static OpenRCF.SerialDevice;
+using System.IO.Ports;
 
-namespace RobotController.OpenRCF
+namespace OpenRCF
 {
-
-    internal class Joystick
+    public class Joystick
     {
         static void Main()
         {
@@ -24,20 +25,21 @@ namespace RobotController.OpenRCF
             int[] CurrentVel = { 0, 0, 0, 0 };
 
             SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
-            byte[] id = new byte[4] { 13, 12, 14, 11 };
-            //byte[] id = new byte[4] { 11, 12, 13, 14 };
 
-            Dynamixel.PortOpen("COM3");
+            byte[] id = new byte[4] { 13, 12, 14, 11 }; //Mecanum
+            //byte[] id = new byte[4] { 11, 12, 13, 14 }; //Omni
+
+            Dynamixel.PortOpen("COM6");
             Dynamixel.TorqueEnable(id);
 
-            MobileInfo Mobile = new MobileInfo();
-            JointState Joint = new JointState();
-
+            MobileInfo MobileInfo = new MobileInfo();
+            JointState JointState = new JointState();
 
             Console.WriteLine("Start XGamepadApp");
+            
             // Initialize XInput
             var controllers = new[] { new Controller(UserIndex.One), new Controller(UserIndex.Two), new Controller(UserIndex.Three), new Controller(UserIndex.Four) };
-            
+
             // Get 1st controller available
             Controller controller = null;
             foreach (var selectControler in controllers)
@@ -69,42 +71,47 @@ namespace RobotController.OpenRCF
                     var state = controller.GetState();
                     //if (previousState.PacketNumber != state.PacketNumber)
 
-                    TargetOdom[0] = map(state.Gamepad.LeftThumbY, -32768, 32767, -0.5, 0.5);
-                    TargetOdom[1] = map(state.Gamepad.LeftThumbX, -32768, 32767, -0.5, 0.5);
-                    TargetOdom[2] = map(state.Gamepad.RightThumbX, -32768, 32767, -0.6, 0.6);
 
-                    if (TargetOdom[0] < 0.1 && TargetOdom[0] > -0.1) TargetOdom[0] = 0;
-                    if (TargetOdom[1] < 0.1 && TargetOdom[1] > -0.1) TargetOdom[1] = 0;
-                    if (TargetOdom[2] < 0.1 && TargetOdom[2] > -0.1) TargetOdom[2] = 0;
+                    switch (state.Gamepad.Buttons)
+                    {
+                        case GamepadButtonFlags.A:
+                            Mobile.Mecanum.MovePos(Dynamixel, id, 1000000, 0.1, new double[] { 1, 1, 0 });
+                            break;
+                        case GamepadButtonFlags.DPadUp:
+                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.43, 0.43, 0 });
+                            break;
+                        case GamepadButtonFlags.DPadDown:
+                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { -0.43, 0, 0 });
+                            break;
+                        case GamepadButtonFlags.DPadLeft:
+                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0, 0.43, 0 });
+                            break;
+                        case GamepadButtonFlags.DPadRight:
+                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0, -0.43, 0 });
+                            break;
+                        case GamepadButtonFlags.LeftShoulder:
+                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.214, 0.214, 0 });
+                            break;
+                        case GamepadButtonFlags.RightShoulder:
+                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.214, -0.214, 0 });
+                            break;
+                        default:
 
-                    Joint = Mecanum4WInverseKinematics(TargetOdom);
+                            TargetOdom[0] = map(state.Gamepad.LeftThumbY, -32768, 32767, -0.43, 0.43);
+                            TargetOdom[1] = map(state.Gamepad.LeftThumbX, -32768, 32767, 0.43, -0.43);
+                            TargetOdom[2] = map(state.Gamepad.RightThumbX, -32768, 32767, -0.6, 0.6);
 
-                    //Console.WriteLine("TargetOdom:{0}, TargetOdom:{1}, TargetOdom:{2}", TargetOdom[0], TargetOdom[1], TargetOdom[2]);
-                    //Console.WriteLine("GVel:{0}, GVel:{1}, GVel:{2}, GVel:{3}", Joint.RPM[0], Joint.RPM[1], Joint.RPM[2], Joint.RPM[3]);
+                            if (TargetOdom[0] < 0.1 && TargetOdom[0] > -0.1) TargetOdom[0] = 0;
+                            if (TargetOdom[1] < 0.1 && TargetOdom[1] > -0.1) TargetOdom[1] = 0;
+                            if (TargetOdom[2] < 0.1 && TargetOdom[2] > -0.1) TargetOdom[2] = 0;
 
-                    TargetVel[0] = (int)(Math.Ceiling(Joint.RPM[0] / 0.229));
-                    TargetVel[1] = (int)(Math.Ceiling(Joint.RPM[1] / 0.229));
-                    TargetVel[2] = (int)(Math.Ceiling(Joint.RPM[2] / 0.229));
-                    TargetVel[3] = (int)(Math.Ceiling(Joint.RPM[3] / 0.229)); 
+                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, TargetOdom);
 
-                    Dynamixel.WriteVelocity(id, TargetVel);
-                    Dynamixel.RequestVelocityReply(id);
+                            break;
+                    }
 
-                    CurrentVel = Dynamixel.Velocity(id);
 
-                    vel[0] = CurrentVel[0];
-                    vel[1] = CurrentVel[1];
-                    vel[2] = CurrentVel[2];
-                    vel[3] = CurrentVel[3];
-
-                    Mobile = Mecanum4WForwardKinematics(vel);
-
-                    CurrentVel = Dynamixel.Velocity(id);
-
-                    //Console.WriteLine("RawX:{0}, VelX:{1}", state.Gamepad.LeftThumbX, vel[0]);
-                    Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
-                    //Console.WriteLine(state.Gamepad);
-                    Thread.Sleep(30);
+                    Thread.Sleep(40);
                     previousState = state;
                 }
             }
