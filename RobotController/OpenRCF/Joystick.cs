@@ -71,7 +71,6 @@ namespace OpenRCF
                     var state = controller.GetState();
                     //if (previousState.PacketNumber != state.PacketNumber)
 
-
                     switch (state.Gamepad.Buttons)
                     {
                         case GamepadButtonFlags.A:
@@ -109,7 +108,6 @@ namespace OpenRCF
 
                             break;
                     }
-
 
                     Thread.Sleep(40);
                     previousState = state;

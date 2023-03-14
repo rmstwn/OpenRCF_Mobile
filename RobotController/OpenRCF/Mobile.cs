@@ -298,7 +298,6 @@ namespace OpenRCF
                     vel[2] = CurrentVel[2] * 0.229;
                     vel[3] = CurrentVel[3] * 0.229;
 
-
                     Mobile = ForwardKinematics(vel);
 
                     if (TargetOdom[0] < 0.01 && TargetOdom[0] > -0.01) TargetOdom[0] = 0;
@@ -625,7 +624,6 @@ namespace OpenRCF
             }
         }
     }
-
 
     //public class Mobile
     //{
